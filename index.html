@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifary - Sorteo Invicta</title>
+    <title>Rifa Reloj Invicta Premium</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div class="app-container">
         
         <header class="app-header">
@@ -15,23 +16,17 @@
                     <img src="avatar.png" alt="Avatar" class="avatar-img">
                 </div>
                 <div class="user-info">
-                    <h2>BRANDON DELGADO</h2>
-                    <span>17 DE JUNIO DE 2026</span>
+                    <h2 style="color: #ffffff; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">BRANDON DELGADO</h2>
+                    <span style="color: #1abc9c; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">RESPONSABLE</span>
                 </div>
             </div>
-            
             <div class="progress-section">
                 <div class="progress-bar-container">
-                    <div id="progressBar" class="progress-bar" style="width: 0%;"></div>
+                    <div id="progressBar" class="progress-bar"></div>
                 </div>
-                <span id="progressText" class="progress-percentage">0%</span>
+                <span id="progressPercent" class="progress-percentage">0%</span>
                 <div class="header-icons">
-                    <div class="icon-btn ticket-icon">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5a2.5 2.5 0 0 1 0-5zM8.5 6h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1zm1 12H7v-2h2.5v2zm0-3.5H7v-2h2.5v2zm0-3.5H7V9h2.5v2z"/></svg>
-                    </div>
-                    <div class="icon-btn menu-icon">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                    </div>
+                    <div class="icon-btn ticket-icon">🎟️</div>
                 </div>
             </div>
         </header>
@@ -39,59 +34,76 @@
         <div class="main-layout">
             
             <aside class="left-panel">
-                <div class="brand-header-box">
-                    <div class="watch-badge">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 2c-3.87 0-7 3.13-7 7 0 3.47 2.52 6.34 5.83 6.89V22h2.34v-6.11c3.31-.55 5.83-3.42 5.83-6.89 0-3.87-3.13-7-7-7zm1 8h-3V8h3v2z"/></svg>
-                    </div>
+                <div class="brand-header-box" style="border: 1px solid rgba(26, 188, 156, 0.3);">
+                    <div class="watch-badge">⌚</div>
                     <div class="brand-text">
-                        <h3>RIFA DE UN RELOJ PREMIUM INVICTA</h3>
-                        <p class="warranty-label">CON GARANTÍA DE 3 AÑOS</p>
+                        <h3 style="color: #f1c40f; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 6px;">🔥 ¡PARTICIPA Y GANA! 🔥</h3>
+                        <p class="warranty-label" style="color: #1abc9c; font-weight: bold; margin-bottom: 10px; font-size: 0.95rem;">INVICTA PREMIUM ORIGINAL</p>
+                        
+                        <p style="font-size: 0.9rem; color: #ffffff; font-weight: bold; margin: 4px 0; letter-spacing: 0.3px;">🛡️ 3 AÑOS DE GARANTÍA</p>
+                        <p style="font-size: 0.9rem; color: #ffffff; font-weight: bold; margin: 4px 0; letter-spacing: 0.3px;">🎰 LOTERÍA DE SANTANDER (19 DE JUNIO)</p>
+                        
+                        <p style="font-size: 1.3rem; color: #f1c40f; font-weight: 900; margin-top: 10px; letter-spacing: 1px;">🎫 BOLETA: $10.000</p>
                     </div>
                 </div>
 
                 <div class="gallery">
                     <div class="photo-card">
                         <div class="img-wrapper">
-                            <img src="reloj.jpg" alt="Reloj">
+                            <img src="reloj.jpg" alt="Reloj Invicta">
                         </div>
-                        <p class="photo-caption">RELOJ INVICTA EN CAJA DE SEGURIDAD</p>
+                        <p class="photo-caption" style="color: #ffffff; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">RELOJ INVICTA EN CAJA DE SEGURIDAD</p>
                     </div>
                     <div class="photo-card">
                         <div class="img-wrapper">
-                            <img src="caja.jpg" alt="Caja">
+                            <img src="caja.jpg" alt="Caja Invicta">
                         </div>
-                        <p class="photo-caption">CAJA DE SEGURIDAD INVICTA</p>
+                        <p class="photo-caption" style="color: #ffffff; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">ESTUCHE ORIGINAL DE ALTA RESISTENCIA</p>
                     </div>
                 </div>
             </aside>
 
-            <section class="right-panel">
-                <div class="panel-title-bar">
-                    <h2>¡ESCOGE TUS NÚMEROS!</h2>
-                    <div class="indicator">
-                        <span class="dot"></span> Disponibles
+            <main class="right-panel">
+                <div class="panel-title-bar" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                    <div class="instruction-box" style="flex: 1; min-width: 280px;">
+                        <h2 style="color: #1abc9c; font-size: 1.4rem; margin-bottom: 8px;">🍀 ¡PARTICIPA POR TU INVICTA!</h2>
+                        <p style="color: #e6f1f1; font-size: 1.05rem; line-height: 1.5; text-align: justify; margin: 0;">
+                            ¡Es súper fácil! <strong>Escoge tu número de la suerte</strong>, coloca tu <strong>nombre completo</strong> abajo, y <strong>teléfono</strong> confirma tu selección y ¡listo, ya estás participando! Te deseamos la mejor de las suertes. ✨
+                        </p>
+                    </div>
+                    <div class="indicator" style="white-space: nowrap; padding-top: 5px; font-size: 0.9rem; color: #83a5a8;">
+                        <span class="dot" style="background-color: #113639; border: 1px solid #1abc9c; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle;"></span> Disponibles
                     </div>
                 </div>
 
-                <main id="gridTablero" class="numbers-grid"></main>
+                <div class="board-container">
+                    <div id="numbersGrid" class="numbers-grid"></div>
+                </div>
 
-                <div class="registration-drawer">
-                    <div class="drawer-inputs">
-                        <input type="text" id="selectedNumDisplay" readonly value="--">
-                        <input type="text" id="buyerNameInput" placeholder="Ingresa el nombre del comprador..." disabled>
+                <div class="registration-drawer" style="margin-top: 20px; background-color: #0b2326; padding: 15px; border-radius: 8px;">
+                    <div class="drawer-inputs" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 0.85rem; color: #1abc9c; font-weight: bold; width: 90px;">NÚMERO:</span>
+                            <input type="text" id="selectedNumDisplay" value="--" readonly style="width: 60px; text-align: center; font-weight: bold; background-color: #113639; color: #fff; border: 1px solid #1abc9c; border-radius: 4px; padding: 6px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 0.85rem; color: #83a5a8; width: 90px; font-weight: bold;">NOMBRE:</span>
+                            <input type="text" id="buyerNameInput" placeholder="Escribe tu nombre completo..." style="flex: 1; padding: 8px; background-color: #113639; border: 1px solid rgba(26,188,156,0.3); border-radius: 4px; color: #fff;">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 0.85rem; color: #83a5a8; width: 90px; font-weight: bold;">TELÉFONO:</span>
+                            <input type="text" id="buyerPhoneInput" placeholder="Escribe tu número de celular..." style="flex: 1; padding: 8px; background-color: #113639; border: 1px solid rgba(26,188,156,0.3); border-radius: 4px; color: #fff;">
+                        </div>
                     </div>
                 </div>
-            </section>
+            </main>
 
         </div>
 
-        <footer class="app-footer">
-            <div class="price-box">
-                VALOR DEL NÚMERO: <span>$10.000</span>
-            </div>
+        <footer class="app-footer" style="justify-content: flex-end; padding: 15px 0;">
             <div class="footer-actions">
-                <button onclick="reiniciarRifa()" class="btn-clear-data">Limpiar Datos</button>
-                <button onclick="confirmarBoleto()" id="btnSubmit" class="btn-confirm" disabled>Confirmar Selección</button>
+                <button id="btnClearData" class="btn-clear-data">Limpiar Datos</button>
+                <button id="btnConfirm" class="btn-confirm">Confirmar Selección</button>
             </div>
         </footer>
 
@@ -100,13 +112,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-<footer class="app-footer">
-            <div class="price-box">
-                VALOR DEL NÚMERO: <span>$10.000</span>
-            </div>
-            <div class="footer-actions">
-                <button onclick="reiniciarRifa()" class="btn-clear-data">Limpiar Datos</button>
-                <button onclick="enviarWhatsApp()" id="btnWhatsApp" class="btn-confirm" style="background-color: #25d366; color: white;" disabled>Compartir WhatsApp</button>
-                <button onclick="confirmarBoleto()" id="btnSubmit" class="btn-confirm" disabled>Confirmar Selección</button>
-            </div>
-        </footer>
