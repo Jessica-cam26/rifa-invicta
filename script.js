@@ -10,15 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedNumber = null;
     let isAdminMode = false; 
-    
-    // Cargar los tickets de la memoria
-    let tickets = JSON.parse(localStorage.getItem('rifa_tickets')) || {};
+    let tickets = {};
+
+    // Configuración de tu Firebase en tiempo real
+    const FIREBASE_URL = 'https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json';
+    const WHATSAPP_DESTINO = '573152365675'; 
 
     if (btnClearData) {
         btnClearData.style.display = 'none'; 
     }
 
-    // Modo Administrador (5 clics en avatar de Brandon Delgado)
+    // Modo Administrador (5 clics en avatar de Brandon)
     let avatarClickCount = 0;
     const avatar = document.querySelector('.avatar-wrapper');
     if (avatar) {
@@ -29,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (password === 'admin123') {
                     isAdminMode = true;
                     if (btnClearData) btnClearData.style.display = 'block';
-                    alert('🔓 ¡Modo Administrador Activado!\n\n1. El botón de borrar todo ya está visible.\n2. Si deseas eliminar UN SOLO NÚMERO, tócalo en el tablero.');
+                    alert('🔓 ¡Modo Administrador Activado!\n\nComo administradora, puedes hacer clic en cualquier número para gestionarlo directamente en la base de datos.');
                 } else {
                     alert('Clave incorrecta.');
                     avatarClickCount = 0;
@@ -39,12 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // FUNCIÓN DE PROGRESO CORREGIDA Y REFORZADA
+    // Función para consultar la base de datos en tiempo real de forma automática
+    function loadTicketsFromFirebase() {
+        fetch(FIREBASE_URL)
+            .then(response => response.json())
+            .then(data => {
+                tickets = data || {};
+                renderGrid();
+            })
+            .catch(error => console.error('Error cargando datos de Firebase:', error));
+    }
+
     function updateProgress() {
         const totalNumbers = 100;
         const occupiedNumbers = Object.keys(tickets).length;
-        
-        // Cálculo matemático directo sobre los tickets reales cargados
         const percentage = Math.round((occupiedNumbers / totalNumbers) * 100);
         
         if (progressBar && progressPercent) {
@@ -67,25 +77,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.classList.add('occupied');
                 cell.style.backgroundColor = '#b73434';
                 cell.style.cursor = 'pointer';
-                cell.title = `Ocupado por: ${tickets[numString]}`;
             } 
             else if (selectedNumber === numString) {
                 cell.classList.add('selected');
             }
 
             cell.addEventListener('click', () => {
-                if (tickets[numString]) {
-                    if (isAdminMode) {
-                        const seguro = confirm(`¿Deseas ELIMINAR el registro del número ${numString}?\nComprador actual: ${tickets[numString]}`);
-                        if (seguro) {
-                            delete tickets[numString];
-                            localStorage.setItem('rifa_tickets', JSON.stringify(tickets));
-                            alert(`El número ${numString} ahora está libre nuevamente.`);
-                            renderGrid();
+                // Lógica del modo administrador (Guardar / Eliminar directamente en la nube)
+                if (isAdminMode) {
+                    if (tickets[numString]) {
+                        if (confirm(`¿Deseas LIBERAR el número ${numString} de la nube?`)) {
+                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, {
+                                method: 'DELETE'
+                            }).then(() => loadTicketsFromFirebase());
                         }
                     } else {
-                        alert(`🚫 El número ${numString} ya está reservado por:\n${tickets[numString]}`);
+                        const nombreAdmin = prompt(`¿A quién le vas a asignar el número ${numString}?`);
+                        if (nombreAdmin) {
+                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, {
+                                method: 'PUT',
+                                body: JSON.stringify(nombreAdmin)
+                            }).then(() => loadTicketsFromFirebase());
+                        }
                     }
+                    return;
+                }
+
+                // Lógica del cliente normal
+                if (tickets[numString]) {
+                    alert(`🚫 El número ${numString} ya está reservado por alguien más.`);
                     return;
                 }
 
@@ -101,61 +121,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
             numbersGrid.appendChild(cell);
         }
-        
-        // Ejecutar el progreso siempre al dibujar la grilla
         updateProgress();
     }
 
-    // Botón Confirmar Selección
+    // Confirmar Selección (Guarda de forma segura en Firebase y notifica por WhatsApp)
     if (btnConfirm) {
         btnConfirm.addEventListener('click', () => {
             const name = buyerNameInput ? buyerNameInput.value.trim() : '';
             const phone = buyerPhoneInput ? buyerPhoneInput.value.trim() : '';
 
-            if (!name) {
-                alert('Por favor, escribe tu nombre completo.');
-                return;
-            }
-            if (!phone) {
-                alert('Por favor, escribe tu número de teléfono celular.');
-                return;
-            }
-            if (!selectedNumber) {
-                alert('Por favor, toca y selecciona un número del tablero.');
-                return;
-            }
+            if (!name) { alert('Por favor, escribe tu nombre completo.'); return; }
+            if (!phone) { alert('Por favor, escribe tu número de teléfono.'); return; }
+            if (!selectedNumber) { alert('Por favor, selecciona un número.'); return; }
 
-            tickets[selectedNumber] = `${name} (Cel: ${phone})`;
-            localStorage.setItem('rifa_tickets', JSON.stringify(tickets));
+            // Verificación de último segundo: Revisar si otra persona lo ganó mientras tanto
+            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${selectedNumber}.json`)
+                .then(res => res.json())
+                .then(alreadyBought => {
+                    if (alreadyBought) {
+                        alert(`⚠️ ¡Qué mala suerte! Alguien acaba de reservar el número ${selectedNumber} hace unos segundos. Por favor selecciona otro.`);
+                        loadTicketsFromFirebase();
+                        return;
+                    }
 
-            alert(`✨ ¡Registro Exitoso! ✨\n\nTu número guardado es el: ${selectedNumber}\n\n¡Muchísima suerte, gracias por la compra de tu boleta! 🍀✨`);
+                    // Guardar el número asignado en Firebase de manera inmediata
+                    fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${selectedNumber}.json`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ nombre: name, telefono: phone })
+                    })
+                    .then(() => {
+                        // Crear mensaje de WhatsApp informativo
+                        const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
+                        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${WHATSAPP_DESTINO}&text=${encodeURIComponent(mensajeTxt)}`;
+                        
+                        // Abrir WhatsApp para concretar el pago
+                        window.open(urlWhatsApp, '_blank');
 
-            selectedNumber = null;
-            if (selectedNumDisplay) selectedNumDisplay.value = '--';
-            if (buyerNameInput) buyerNameInput.value = '';
-            if (buyerPhoneInput) buyerPhoneInput.value = '';
-
-            renderGrid();
+                        // Resetear campos locales e清空
+                        selectedNumber = null;
+                        if (selectedNumDisplay) selectedNumDisplay.value = '--';
+                        if (buyerNameInput) buyerNameInput.value = '';
+                        if (buyerPhoneInput) buyerPhoneInput.value = '';
+                        
+                        // Recargar el tablero de inmediato
+                        loadTicketsFromFirebase();
+                    });
+                });
         });
     }
 
+    // Botón borrar todo para el administrador
     if (btnClearData) {
         btnClearData.addEventListener('click', () => {
-            if (confirm('⚠️ ¿Estás completamente segura de borrar TODOS los números de la rifa?')) {
-                localStorage.removeItem('rifa_tickets');
-                tickets = {};
-                selectedNumber = null;
-                isAdminMode = false;
-                if (selectedNumDisplay) selectedNumDisplay.value = '--';
-                if (buyerNameInput) buyerNameInput.value = '';
-                if (buyerPhoneInput) buyerPhoneInput.value = '';
-                btnClearData.style.display = 'none';
-                avatarClickCount = 0;
-                renderGrid();
+            if (confirm('⚠️ ¿Estás segura de borrar TODA la base de datos en la nube de Firebase? Esta acción no se puede deshacer.')) {
+                fetch('https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json', {
+                    method: 'DELETE'
+                }).then(() => {
+                    isAdminMode = false;
+                    btnClearData.style.display = 'none';
+                    avatarClickCount = 0;
+                    loadTicketsFromFirebase();
+                });
             }
         });
     }
 
-    // Inicializar todo el tablero y calcular el porcentaje inicial de inmediato
-    renderGrid();
+    // Primera carga al abrir la página
+    loadTicketsFromFirebase();
+    
+    // Auto-actualizar el tablero cada 10 segundos por si hay más personas comprando al mismo tiempo
+    setInterval(loadTicketsFromFirebase, 10000);
 });
