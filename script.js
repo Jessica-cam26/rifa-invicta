@@ -12,15 +12,47 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAdminMode = false; 
     let tickets = {};
 
-    // Configuración de tu Firebase en tiempo real
     const FIREBASE_URL = 'https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json';
     const WHATSAPP_DESTINO = '573152365675'; 
 
-    if (btnClearData) {
-        btnClearData.style.display = 'none'; 
+    if (btnClearData) { btnClearData.style.display = 'none'; }
+
+    // Función para alertas profesionales en el centro de la pantalla
+    function mostrarAlertaProfesional(titulo, mensaje, esExito = false) {
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        // Estilos rápidos por código para asegurar que se centre en cualquier pantalla
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0'; overlay.style.left = '0';
+        overlay.style.width = '100vw'; overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
+        overlay.style.display = 'flex'; overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center'; overlay.style.zIndex = '99999';
+
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.background = '#0b2326';
+        modal.style.border = esExito ? '2px solid #1abc9c' : '2px solid #b73434';
+        modal.style.borderRadius = '12px'; modal.style.padding = '25px';
+        modal.style.textAlign = 'center'; modal.style.maxWidth = '300px';
+        modal.style.width = '85%';
+
+        modal.innerHTML = `
+            <h3 style="color: ${esExito ? '#1abc9c' : '#b73434'}; margin-top:0; font-size: 1.3rem;">${titulo}</h3>
+            <p style="color: #ffffff; font-size: 0.95rem; margin: 15px 0; line-height: 1.4;">${mensaje}</p>
+            <button id="btnCerrarModal" style="background: ${esExito ? '#1abc9c' : '#b73434'}; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Entendido</button>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        document.getElementById('btnCerrarModal').addEventListener('click', () => {
+            overlay.remove();
+        });
     }
 
-    // Modo Administrador (5 clics en avatar de Brandon)
+    // Modo Administrador
     let avatarClickCount = 0;
     const avatar = document.querySelector('.avatar-wrapper');
     if (avatar) {
@@ -31,9 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (password === 'admin123') {
                     isAdminMode = true;
                     if (btnClearData) btnClearData.style.display = 'block';
-                    alert('🔓 ¡Modo Administrador Activado!\n\nComo administradora, puedes hacer clic en cualquier número para gestionarlo directamente en la base de datos.');
+                    mostrarAlertaProfesional('🔓 Modo Admin', '¡Modo Administrador Activado! Ya puedes gestionar el tablero.', true);
                 } else {
-                    alert('Clave incorrecta.');
+                    mostrarAlertaProfesional('❌ Error', 'Clave incorrecta.');
                     avatarClickCount = 0;
                     isAdminMode = false;
                 }
@@ -41,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Función para consultar la base de datos en tiempo real de forma automática
     function loadTicketsFromFirebase() {
         fetch(FIREBASE_URL)
             .then(response => response.json())
@@ -56,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalNumbers = 100;
         const occupiedNumbers = Object.keys(tickets).length;
         const percentage = Math.round((occupiedNumbers / totalNumbers) * 100);
-        
         if (progressBar && progressPercent) {
             progressBar.style.width = `${percentage}%`;
             progressPercent.textContent = `${percentage}%`;
@@ -76,36 +106,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tickets[numString]) {
                 cell.classList.add('occupied');
                 cell.style.backgroundColor = '#b73434';
-                cell.style.cursor = 'pointer';
-            } 
-            else if (selectedNumber === numString) {
+            } else if (selectedNumber === numString) {
                 cell.classList.add('selected');
             }
 
             cell.addEventListener('click', () => {
-                // Lógica del modo administrador (Guardar / Eliminar directamente en la nube)
                 if (isAdminMode) {
                     if (tickets[numString]) {
-                        if (confirm(`¿Deseas LIBERAR el número ${numString} de la nube?`)) {
-                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, {
-                                method: 'DELETE'
-                            }).then(() => loadTicketsFromFirebase());
+                        if (confirm(`¿Deseas LIBERAR el número ${numString}?`)) {
+                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, { method: 'DELETE' }).then(() => loadTicketsFromFirebase());
                         }
                     } else {
                         const nombreAdmin = prompt(`¿A quién le vas a asignar el número ${numString}?`);
                         if (nombreAdmin) {
-                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, {
-                                method: 'PUT',
-                                body: JSON.stringify(nombreAdmin)
-                            }).then(() => loadTicketsFromFirebase());
+                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, { method: 'PUT', body: JSON.stringify(nombreAdmin) }).then(() => loadTicketsFromFirebase());
                         }
                     }
                     return;
                 }
 
-                // Lógica del cliente normal
                 if (tickets[numString]) {
-                    alert(`🚫 El número ${numString} ya está reservado por alguien más.`);
+                    mostrarAlertaProfesional('🚫 No disponible', `El número ${numString} ya está reservado por otra persona.`);
                     return;
                 }
 
@@ -124,59 +145,52 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
     }
 
-    // Confirmar Selección (Guarda de forma segura en Firebase y notifica por WhatsApp)
     if (btnConfirm) {
         btnConfirm.addEventListener('click', () => {
             const name = buyerNameInput ? buyerNameInput.value.trim() : '';
             const phone = buyerPhoneInput ? buyerPhoneInput.value.trim() : '';
 
-            if (!name) { alert('Por favor, escribe tu nombre completo.'); return; }
-            if (!phone) { alert('Por favor, escribe tu número de teléfono.'); return; }
-            if (!selectedNumber) { alert('Por favor, selecciona un número.'); return; }
+            if (!name) { mostrarAlertaProfesional('✏️ Dato requerido', 'Por favor, escribe tu nombre completo.'); return; }
+            if (!phone) { mostrarAlertaProfesional('✏️ Dato requerido', 'Por favor, escribe tu número de teléfono.'); return; }
+            if (!selectedNumber) { mostrarAlertaProfesional('🎰 Selección vacía', 'Por favor, toca un número del tablero para seleccionarlo.'); return; }
 
-            // Verificación de último segundo: Revisar si otra persona lo ganó mientras tanto
             fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${selectedNumber}.json`)
                 .then(res => res.json())
                 .then(alreadyBought => {
                     if (alreadyBought) {
-                        alert(`⚠️ ¡Qué mala suerte! Alguien acaba de reservar el número ${selectedNumber} hace unos segundos. Por favor selecciona otro.`);
+                        mostrarAlertaProfesional('⏳ ¡Casi!', `El número ${selectedNumber} se acaba de vender hace un instante. Por favor, elige otro.`, false);
                         loadTicketsFromFirebase();
                         return;
                     }
 
-                    // Guardar el número asignado en Firebase de manera inmediata
                     fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${selectedNumber}.json`, {
                         method: 'PUT',
                         body: JSON.stringify({ nombre: name, telefono: phone })
                     })
                     .then(() => {
-                        // Crear mensaje de WhatsApp informativo
-                        const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
-                        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${WHATSAPP_DESTINO}&text=${encodeURIComponent(mensajeTxt)}`;
-                        
-                        // Abrir WhatsApp para concretar el pago
-                        window.open(urlWhatsApp, '_blank');
+                        // Alerta limpia en el centro de la pantalla
+                        mostrarAlertaProfesional('🎉 ¡Excelente Selección!', `Tu número ${selectedNumber} ha sido reservado con éxito. Ahora te redirigiremos a WhatsApp para finalizar tu pago.`, true);
 
-                        // Resetear campos locales e清空
-                        selectedNumber = null;
-                        if (selectedNumDisplay) selectedNumDisplay.value = '--';
-                        if (buyerNameInput) buyerNameInput.value = '';
-                        if (buyerPhoneInput) buyerPhoneInput.value = '';
-                        
-                        // Recargar el tablero de inmediato
-                        loadTicketsFromFirebase();
+                        setTimeout(() => {
+                            const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
+                            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${WHATSAPP_DESTINO}&text=${encodeURIComponent(mensajeTxt)}`;
+                            window.open(urlWhatsApp, '_blank');
+
+                            selectedNumber = null;
+                            if (selectedNumDisplay) selectedNumDisplay.value = '--';
+                            if (buyerNameInput) buyerNameInput.value = '';
+                            if (buyerPhoneInput) buyerPhoneInput.value = '';
+                            loadTicketsFromFirebase();
+                        }, 2500); // 2.5 segundos de espera para que lean el mensaje de éxito antes de abrir WhatsApp
                     });
                 });
         });
     }
 
-    // Botón borrar todo para el administrador
     if (btnClearData) {
         btnClearData.addEventListener('click', () => {
-            if (confirm('⚠️ ¿Estás segura de borrar TODA la base de datos en la nube de Firebase? Esta acción no se puede deshacer.')) {
-                fetch('https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json', {
-                    method: 'DELETE'
-                }).then(() => {
+            if (confirm('⚠️ ¿Borrar TODA la base de datos de Firebase?')) {
+                fetch('https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json', { method: 'DELETE' }).then(() => {
                     isAdminMode = false;
                     btnClearData.style.display = 'none';
                     avatarClickCount = 0;
@@ -186,9 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Primera carga al abrir la página
     loadTicketsFromFirebase();
-    
-    // Auto-actualizar el tablero cada 10 segundos por si hay más personas comprando al mismo tiempo
     setInterval(loadTicketsFromFirebase, 10000);
 });
