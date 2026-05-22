@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let tickets = {};
 
     const FIREBASE_URL = 'https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets.json';
-    const WHATSAPP_DESTINO = '573152365675'; 
+    const WHATSAPP_DESTINO = '573167498585'; // Tu nuevo número configurado
 
     if (btnClearData) { btnClearData.style.display = 'none'; }
 
@@ -38,10 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.textAlign = 'center'; modal.style.maxWidth = '300px';
         modal.style.width = '85%';
 
+        // Si es éxito, el botón dice Continuar al Pago, si no, dice Entendido
+        const textoBoton = esExito ? 'Continuar al Pago 🚀' : 'Entendido';
+
         modal.innerHTML = `
             <h3 style="color: ${esExito ? '#1abc9c' : '#b73434'}; margin-top:0; font-size: 1.3rem;">${titulo}</h3>
             <p style="color: #ffffff; font-size: 0.95rem; margin: 15px 0; line-height: 1.4;">${mensaje}</p>
-            <button id="btnCerrarModal" style="background: ${esExito ? '#1abc9c' : '#b73434'}; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Entendido</button>
+            <button id="btnCerrarModal" style="background: ${esExito ? '#1abc9c' : '#b73434'}; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">${textoBoton}</button>
         `;
 
         overlay.appendChild(modal);
@@ -49,6 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnCerrarModal').addEventListener('click', () => {
             overlay.remove();
+            
+            // Si el registro fue exitoso, al dar clic abre el WhatsApp de una vez sin esperas
+            if (esExito) {
+                const name = buyerNameInput ? buyerNameInput.value.trim() : '';
+                const phone = buyerPhoneInput ? buyerPhoneInput.value.trim() : '';
+                const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
+                const urlWhatsApp = `https://api.whatsapp.com/send?phone=${WHATSAPP_DESTINO}&text=${encodeURIComponent(mensajeTxt)}`;
+                
+                window.open(urlWhatsApp, '_blank');
+
+                selectedNumber = null;
+                if (selectedNumDisplay) selectedNumDisplay.value = '--';
+                if (buyerNameInput) buyerNameInput.value = '';
+                if (buyerPhoneInput) buyerPhoneInput.value = '';
+                loadTicketsFromFirebase();
+            }
         });
     }
 
@@ -168,20 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ nombre: name, telefono: phone })
                     })
                     .then(() => {
-                        // Alerta limpia en el centro de la pantalla
-                        mostrarAlertaProfesional('🎉 ¡Excelente Selección!', `Tu número ${selectedNumber} ha sido reservado con éxito. Ahora te redirigiremos a WhatsApp para finalizar tu pago.`, true);
-
-                        setTimeout(() => {
-                            const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
-                            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${WHATSAPP_DESTINO}&text=${encodeURIComponent(mensajeTxt)}`;
-                            window.open(urlWhatsApp, '_blank');
-
-                            selectedNumber = null;
-                            if (selectedNumDisplay) selectedNumDisplay.value = '--';
-                            if (buyerNameInput) buyerNameInput.value = '';
-                            if (buyerPhoneInput) buyerPhoneInput.value = '';
-                            loadTicketsFromFirebase();
-                        }, 2500); // 2.5 segundos de espera para que lean el mensaje de éxito antes de abrir WhatsApp
+                        // Muestra el mensaje de éxito en el centro sin redirección automática molesta
+                        mostrarAlertaProfesional('🎉 ¡Excelente Selección!', `Tu número ${selectedNumber} ha sido reservado con éxito. Presiona el botón de abajo para finalizar tu pago en WhatsApp.`, true);
                     });
                 });
         });
