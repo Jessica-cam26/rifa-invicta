@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.textAlign = 'center'; modal.style.maxWidth = '300px';
         modal.style.width = '85%';
 
-        // Si es éxito, el botón dice Continuar al Pago, si no, dice Entendido
         const textoBoton = esExito ? 'Continuar al Pago 🚀' : 'Entendido';
 
         modal.innerHTML = `
@@ -52,9 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnCerrarModal').addEventListener('click', () => {
             overlay.remove();
-            
-            // Si el registro fue exitoso, al dar clic abre el WhatsApp de una vez sin esperas
-            if (esExito) {
+
+            // Si la boleta se guardó bien, al dar clic en el botón lo manda a WhatsApp de una vez
+            if (esExito && selectedNumber) {
                 const name = buyerNameInput ? buyerNameInput.value.trim() : '';
                 const phone = buyerPhoneInput ? buyerPhoneInput.value.trim() : '';
                 const mensajeTxt = `¡Hola! 🔥 Acabo de separar la boleta de la rifa en tu página web ⌚.\n\n📌 *Detalles de mi registro:*\n🎫 *Número elegido:* ${selectedNumber}\n👤 *Nombre:* ${name}\n📞 *Celular:* ${phone}\n\nYa quedó bloqueado en el sistema, quedo atento(a) para realizar el pago. 🍀`;
@@ -62,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 window.open(urlWhatsApp, '_blank');
 
+                // Limpieza de campos después de abrir la pestaña
                 selectedNumber = null;
                 if (selectedNumDisplay) selectedNumDisplay.value = '--';
                 if (buyerNameInput) buyerNameInput.value = '';
@@ -132,13 +132,17 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.addEventListener('click', () => {
                 if (isAdminMode) {
                     if (tickets[numString]) {
-                        if (confirm(`¿Deseas LIBERAR el número ${numString}?`)) {
+                        // Extrae los datos reales guardados en Firebase para mostrártelos antes
+                        const comprador = tickets[numString].nombre || "Desconocido";
+                        const telefono = tickets[numString].telefono || "Sin teléfono";
+
+                        if (confirm(`🎫 Número: ${numString}\n👤 Comprador: ${comprador}\n📞 Teléfono: ${telefono}\n\n¿Deseas LIBERAR el número ${numString}?`)) {
                             fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, { method: 'DELETE' }).then(() => loadTicketsFromFirebase());
                         }
                     } else {
                         const nombreAdmin = prompt(`¿A quién le vas a asignar el número ${numString}?`);
                         if (nombreAdmin) {
-                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, { method: 'PUT', body: JSON.stringify(nombreAdmin) }).then(() => loadTicketsFromFirebase());
+                            fetch(`https://rifa-invicta-3d07c-default-rtdb.firebaseio.com/tickets/${numString}.json`, { method: 'PUT', body: JSON.stringify({ nombre: nombreAdmin, telefono: "Asignado por Admin" }) }).then(() => loadTicketsFromFirebase());
                         }
                     }
                     return;
@@ -187,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ nombre: name, telefono: phone })
                     })
                     .then(() => {
-                        // Muestra el mensaje de éxito en el centro sin redirección automática molesta
+                        // Lanza la alerta y frena ahí. La redirección ocurre arriba al tocar "Continuar al Pago"
                         mostrarAlertaProfesional('🎉 ¡Excelente Selección!', `Tu número ${selectedNumber} ha sido reservado con éxito. Presiona el botón de abajo para finalizar tu pago en WhatsApp.`, true);
                     });
                 });
